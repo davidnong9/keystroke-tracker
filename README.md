@@ -55,40 +55,6 @@ Then open [http://localhost:5000](http://localhost:5000) in your browser.
 python main.py
 ```
 
-## Deploying to Heroku
-
-1. Create a Heroku app and set the required config var:
-
-```bash
-heroku config:set SECRET_KEY=your-long-random-secret --app your-app-name
-```
-
-You can generate a strong secret key with:
-
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-2. Make sure your dynos are running:
-
-```bash
-heroku ps:scale web=1 --app your-app-name
-```
-
-3. Push to deploy:
-
-```bash
-git push heroku main
-```
-
-### Python Version
-
-Heroku's `runtime.txt` is deprecated. Replace it with a `.python-version` file containing just:
-
-```
-3.11
-```
-
 ## How It Works
 
 **Web app:** The browser captures `keydown` events via JavaScript and sends each keypress to `/api/keypress`. The Flask backend stores all tracker state in a signed session cookie, keyed by a unique user ID. The UI polls `/api/status` every second to update the live count, timer, and chart.
