@@ -8,15 +8,10 @@ app.secret_key = os.environ.get('SECRET_KEY', 'keystroke-tracker-secret-key-1234
 
 def get_user_tracker():
     """Get or create a tracker instance for the current user using Flask session"""
-    print(f"DEBUG: Session keys: {list(session.keys()) if session else 'NO SESSION'}")
-    print(f"DEBUG: SECRET_KEY set: {'SECRET_KEY' in os.environ}")
-    
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
-        print(f"DEBUG: Created new user_id: {session['user_id']}")
     
     user_id = session['user_id']
-    print(f"DEBUG: Current user_id: {user_id}")
     
     # Initialize tracker state in session if not present
     if 'tracker_data' not in session:
@@ -28,7 +23,6 @@ def get_user_tracker():
             'session_start_count': 0,
             'session_start_time': None
         }
-        print("DEBUG: Initialized new tracker_data")
     
     # Create a tracker instance and restore its state from session
     tracker = KeystrokeTrackerBackend()
@@ -40,7 +34,6 @@ def get_user_tracker():
     tracker.session_start_count = data['session_start_count']
     tracker.session_start_time = data['session_start_time']
     
-    print(f"DEBUG: Restored tracker state - count: {tracker.count}, running: {tracker.running}")
     return tracker
 
 def save_tracker_state(tracker):
@@ -64,16 +57,6 @@ def status():
     return jsonify(get_user_tracker().get_status())
 
 @app.route('/api/debug')
-def debug():
-    """Debug endpoint to check session and environment"""
-    return jsonify({
-        'session_id': session.get('user_id', 'NO_SESSION'),
-        'has_tracker_data': 'tracker_data' in session,
-        'secret_key_set': 'SECRET_KEY' in os.environ,
-        'session_keys': list(session.keys()) if session else [],
-        'tracker_data_keys': list(session.get('tracker_data', {}).keys()) if 'tracker_data' in session else []
-    })
-
 @app.route('/api/start', methods=['POST'])
 def start():
     tracker = get_user_tracker()
