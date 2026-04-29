@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, render_template, request, session
 from tracker import KeystrokeTrackerBackend
 import uuid
-
 import os
 
 app = Flask(__name__)
