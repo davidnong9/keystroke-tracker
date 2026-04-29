@@ -186,7 +186,11 @@
 
     async function fetchStatus() {
       const response = await fetch('/api/status');
-      const status = await response.json();
+      const data = await response.json();
+      updateUI(data);
+    }
+
+    function updateUI(status) {
       document.getElementById('count').textContent = status.count;
       document.getElementById('duration').textContent = status.duration;
       document.getElementById('topKeys').textContent = status.top_keys;
@@ -234,14 +238,20 @@
     });
 
     async function startTracking() {
-      await fetch('/api/start', { method: 'POST' });
-      await fetchStatus();
+      const response = await fetch('/api/start', { method: 'POST' });
+      const data = await response.json();
+      if (data.success && data.status) {
+        updateUI(data.status);
+      }
     }
 
     async function stopTracking() {
-      await fetch('/api/stop', { method: 'POST' });
-      await fetchStatus();
-      await fetchHistory();
+      const response = await fetch('/api/stop', { method: 'POST' });
+      const data = await response.json();
+      if (data.success && data.status) {
+        updateUI(data.status);
+        await fetchHistory();
+      }
     }
 
     setInterval(fetchStatus, 1000);
