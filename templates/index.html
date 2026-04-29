@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keystroke Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <h1>Keystroke Tracker</h1>
+      <p>Web UI powered by Flask</p>
+    </header>
+
+    <section class="status-card">
+      <div>
+        <span class="status-label">Total Keystrokes</span>
+        <strong id="count">0</strong>
+      </div>
+      <div>
+        <span class="status-label">Session Time</span>
+        <strong id="duration">00:00:00</strong>
+      </div>
+      <div>
+        <span class="status-label">Top 3 Keys</span>
+        <strong id="topKeys">None</strong>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <h2>Top 3 Keys Visualization</h2>
+      <canvas id="topKeysChart" width="400" height="200"></canvas>
+    </section>
+
+    <section class="controls">
+      <button id="startButton" class="btn btn-primary" onclick="startTracking()">Start</button>
+      <button id="stopButton" class="btn btn-secondary" onclick="stopTracking()" disabled>Stop</button>
+    </section>
+
+    <section class="history-card">
+      <h2>Session History</h2>
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date / Time</th>
+            <th>Duration</th>
+            <th>Keystrokes</th>
+            <th>Top 3 Keys</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    let topKeysChart;
+
+    function initChart() {
+      const ctx = document.getElementById('topKeysChart').getContext('2d');
+      topKeysChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Key Press Count',
+            data: [],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 205, 86, 0.6)'
+            ],
+            borderColor: [
+              'rgba(255, 99, 132, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 205, 86, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart(topKeysData) {
+      if (!topKeysChart) {
+        initChart();
+      }
+      
+      topKeysChart.data.labels = topKeysData.map(item => item.key || 'None');
+      topKeysChart.data.datasets[0].data = topKeysData.map(item => item.count || 0);
+      topKeysChart.update();
+    }
+    async function fetchStatus() {
+      const response = await fetch('/api/status');
+      const status = await response.json();
+      document.getElementById('count').textContent = status.count;
+      document.getElementById('duration').textContent = status.duration;
+      document.getElementById('topKeys').textContent = status.top_keys;
+      document.getElementById('startButton').disabled = status.running;
+      document.getElementById('stopButton').disabled = !status.running;
+    }
+
+    async function fetchHistory() {
+      const response = await fetch('/api/history');
+      const sessions = await response.json();
+      const tbody = document.querySelector('#historyTable tbody');
+      tbody.innerHTML = '';
+      sessions.forEach((session, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${session.time}</td>
+          <td>${session.duration}</td>
+          <td>${session.keystrokes}</td>
+          <td>${session.top_keys}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    let tracking = false;
+
+    async function fetchStatus() {
+      const response = await fetch('/api/status');
+      const status = await response.json();
+      document.getElementById('count').textContent = status.count;
+      document.getElementById('duration').textContent = status.duration;
+      document.getElementById('topKeys').textContent = status.top_keys;
+      document.getElementById('startButton').disabled = status.running;
+      document.getElementById('stopButton').disabled = !status.running;
+      tracking = status.running;
+      
+      // Update the chart with top keys data
+      updateChart(status.top_keys_data || []);
+    }
+
+    async function fetchHistory() {
+      const response = await fetch('/api/history');
+      const sessions = await response.json();
+      const tbody = document.querySelector('#historyTable tbody');
+      tbody.innerHTML = '';
+      sessions.forEach((session, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${session.time}</td>
+          <td>${session.duration}</td>
+          <td>${session.keystrokes}</td>
+          <td>${session.top_keys}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function sendKey(key) {
+      await fetch('/api/keypress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ key })
+      });
+    }
+
+    document.addEventListener('keydown', async (event) => {
+      if (!tracking) return;
+      const key = event.key;
+      await sendKey(key);
+      await fetchStatus();
+    });
+
+    async function startTracking() {
+      await fetch('/api/start', { method: 'POST' });
+      await fetchStatus();
+    }
+
+    async function stopTracking() {
+      await fetch('/api/stop', { method: 'POST' });
+      await fetchStatus();
+      await fetchHistory();
+    }
+
+    setInterval(fetchStatus, 1000);
+    setInterval(fetchHistory, 5000);
+    initChart();
+    fetchStatus();
+    fetchHistory();
+  </script>
+</body>
+</html>

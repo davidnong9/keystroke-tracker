@@ -1,0 +1,122 @@
+:root {
+  --bg: #fafafa;
+  --card: #ffffff;
+  --text: #1e1e1e;
+  --muted: #5a5a5a;
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --border: #e5e7eb;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px 32px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+header p {
+  margin: 8px 0 24px;
+  color: var(--muted);
+}
+
+.status-card,
+.history-card,
+.chart-card,
+.controls {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.status-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.status-card div {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f4f8ff;
+}
+
+.status-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--secondary);
+  font-size: 0.9rem;
+}
+
+.status-card strong {
+  font-size: 1.75rem;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: var(--border);
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.history-card h2 {
+  margin-top: 0;
+}
+
+#historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+#historyTable th,
+#historyTable td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.chart-card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+#topKeysChart {
+  max-width: 100%;
+  height: auto !important;
+}
