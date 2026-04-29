@@ -30,7 +30,13 @@
     </section>
 
     <section class="chart-card">
-      <h2>Top 3 Keys Visualization</h2>
+      <div class="chart-header">
+        <h2>Top 3 Keys Visualization</h2>
+        <div class="chart-toggle">
+          <button id="barChartBtn" class="chart-btn active" onclick="switchChart('bar')">Bar Chart</button>
+          <button id="pieChartBtn" class="chart-btn" onclick="switchChart('pie')">Pie Chart</button>
+        </div>
+      </div>
       <canvas id="topKeysChart" width="400" height="200"></canvas>
     </section>
 
@@ -58,51 +64,90 @@
 
   <script>
     let topKeysChart;
+    let currentChartType = 'bar';
 
-    function initChart() {
+    function initChart(chartType = 'bar') {
       const ctx = document.getElementById('topKeysChart').getContext('2d');
-      topKeysChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Key Press Count',
-            data: [],
-            backgroundColor: [
-              'rgba(255, 99, 132, 0.6)',
-              'rgba(54, 162, 235, 0.6)',
-              'rgba(255, 205, 86, 0.6)'
-            ],
-            borderColor: [
-              'rgba(255, 99, 132, 1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 205, 86, 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1
+      
+      const commonData = {
+        labels: [],
+        datasets: [{
+          label: 'Key Press Count',
+          data: [],
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 205, 86, 0.6)'
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 205, 86, 1)'
+          ],
+          borderWidth: 1
+        }]
+      };
+
+      let config;
+      if (chartType === 'pie') {
+        config = {
+          type: 'pie',
+          data: commonData,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right',
               }
             }
-          },
-          plugins: {
-            legend: {
-              display: false
+          }
+        };
+      } else {
+        config = {
+          type: 'bar',
+          data: commonData,
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
             }
           }
-        }
-      });
+        };
+      }
+
+      topKeysChart = new Chart(ctx, config);
+    }
+
+    function switchChart(chartType) {
+      currentChartType = chartType;
+      
+      // Update button states
+      document.getElementById('barChartBtn').classList.toggle('active', chartType === 'bar');
+      document.getElementById('pieChartBtn').classList.toggle('active', chartType === 'pie');
+      
+      // Destroy existing chart and create new one
+      if (topKeysChart) {
+        topKeysChart.destroy();
+      }
+      initChart(chartType);
+      
+      // Re-fetch data to populate the new chart
+      fetchStatus();
     }
 
     function updateChart(topKeysData) {
       if (!topKeysChart) {
-        initChart();
+        initChart(currentChartType);
       }
       
       topKeysChart.data.labels = topKeysData.map(item => item.key || 'None');

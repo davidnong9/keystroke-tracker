@@ -116,6 +116,39 @@ header p {
   margin-bottom: 16px;
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.chart-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.chart-btn:hover {
+  background: var(--border);
+}
+
+.chart-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 #topKeysChart {
   max-width: 100%;
   height: auto !important;
