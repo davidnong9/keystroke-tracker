@@ -65,10 +65,11 @@
   <script>
     let topKeysChart;
     let currentChartType = 'bar';
+    let tracking = false;
 
     function initChart(chartType = 'bar') {
       const ctx = document.getElementById('topKeysChart').getContext('2d');
-      
+
       const commonData = {
         labels: [],
         datasets: [{
@@ -88,106 +89,42 @@
         }]
       };
 
-      let config;
-      if (chartType === 'pie') {
-        config = {
-          type: 'pie',
-          data: commonData,
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'right',
-              }
+      const config = chartType === 'pie'
+        ? {
+            type: 'pie',
+            data: commonData,
+            options: {
+              responsive: true,
+              plugins: { legend: { position: 'right' } }
             }
           }
-        };
-      } else {
-        config = {
-          type: 'bar',
-          data: commonData,
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  stepSize: 1
-                }
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              }
+        : {
+            type: 'bar',
+            data: commonData,
+            options: {
+              responsive: true,
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+              plugins: { legend: { display: false } }
             }
-          }
-        };
-      }
+          };
 
       topKeysChart = new Chart(ctx, config);
     }
 
     function switchChart(chartType) {
       currentChartType = chartType;
-      
-      // Update button states
       document.getElementById('barChartBtn').classList.toggle('active', chartType === 'bar');
       document.getElementById('pieChartBtn').classList.toggle('active', chartType === 'pie');
-      
-      // Destroy existing chart and create new one
-      if (topKeysChart) {
-        topKeysChart.destroy();
-      }
+      if (topKeysChart) topKeysChart.destroy();
       initChart(chartType);
-      
-      // Re-fetch data to populate the new chart
       fetchStatus();
     }
 
     function updateChart(topKeysData) {
-      if (!topKeysChart) {
-        initChart(currentChartType);
-      }
-      
+      if (!topKeysChart) initChart(currentChartType);
       topKeysChart.data.labels = topKeysData.map(item => item.key || 'None');
       topKeysChart.data.datasets[0].data = topKeysData.map(item => item.count || 0);
       topKeysChart.update();
-    }
-    async function fetchStatus() {
-      const response = await fetch('/api/status');
-      const status = await response.json();
-      document.getElementById('count').textContent = status.count;
-      document.getElementById('duration').textContent = status.duration;
-      document.getElementById('topKeys').textContent = status.top_keys;
-      document.getElementById('startButton').disabled = status.running;
-      document.getElementById('stopButton').disabled = !status.running;
-    }
-
-    async function fetchHistory() {
-      const response = await fetch('/api/history');
-      const sessions = await response.json();
-      const tbody = document.querySelector('#historyTable tbody');
-      tbody.innerHTML = '';
-      sessions.forEach((session, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${session.time}</td>
-          <td>${session.duration}</td>
-          <td>${session.keystrokes}</td>
-          <td>${session.top_keys}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    let tracking = false;
-
-    async function fetchStatus() {
-      const response = await fetch('/api/status');
-      const data = await response.json();
-      updateUI(data);
     }
 
     function updateUI(status) {
@@ -197,60 +134,82 @@
       document.getElementById('startButton').disabled = status.running;
       document.getElementById('stopButton').disabled = !status.running;
       tracking = status.running;
-      
-      // Update the chart with top keys data
       updateChart(status.top_keys_data || []);
     }
 
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error(res.status);
+        updateUI(await res.json());
+      } catch (e) {
+        console.warn('Status fetch failed:', e);
+      }
+    }
+
     async function fetchHistory() {
-      const response = await fetch('/api/history');
-      const sessions = await response.json();
-      const tbody = document.querySelector('#historyTable tbody');
-      tbody.innerHTML = '';
-      sessions.forEach((session, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${session.time}</td>
-          <td>${session.duration}</td>
-          <td>${session.keystrokes}</td>
-          <td>${session.top_keys}</td>
-        `;
-        tbody.appendChild(row);
-      });
+      try {
+        const res = await fetch('/api/history');
+        if (!res.ok) throw new Error(res.status);
+        const sessions = await res.json();
+        const tbody = document.querySelector('#historyTable tbody');
+        tbody.innerHTML = '';
+        sessions.forEach((session, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${session.time}</td>
+            <td>${session.duration}</td>
+            <td>${session.keystrokes}</td>
+            <td>${session.top_keys}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (e) {
+        console.warn('History fetch failed:', e);
+      }
     }
 
     async function sendKey(key) {
-      await fetch('/api/keypress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ key })
-      });
+      try {
+        await fetch('/api/keypress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key })
+        });
+      } catch (e) {
+        console.warn('Keypress send failed:', e);
+      }
     }
 
     document.addEventListener('keydown', async (event) => {
       if (!tracking) return;
-      const key = event.key;
-      await sendKey(key);
+      await sendKey(event.key);
       await fetchStatus();
     });
 
     async function startTracking() {
-      const response = await fetch('/api/start', { method: 'POST' });
-      const data = await response.json();
-      if (data.success && data.status) {
-        updateUI(data.status);
+      try {
+        const res = await fetch('/api/start', { method: 'POST' });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        if (data.success && data.status) updateUI(data.status);
+      } catch (e) {
+        console.warn('Start failed:', e);
       }
     }
 
     async function stopTracking() {
-      const response = await fetch('/api/stop', { method: 'POST' });
-      const data = await response.json();
-      if (data.success && data.status) {
-        updateUI(data.status);
-        await fetchHistory();
+      try {
+        const res = await fetch('/api/stop', { method: 'POST' });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        if (data.success && data.status) {
+          updateUI(data.status);
+          await fetchHistory();
+        }
+      } catch (e) {
+        console.warn('Stop failed:', e);
       }
     }
 

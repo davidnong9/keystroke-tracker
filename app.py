@@ -4,7 +4,10 @@ import uuid
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'keystroke-tracker-secret-key-12345')
+secret = os.environ.get('SECRET_KEY')
+if not secret:
+    raise RuntimeError("SECRET_KEY environment variable is required")
+app.secret_key = secret
 
 def get_user_tracker():
     """Get or create a tracker instance for the current user using Flask session"""
@@ -56,7 +59,10 @@ def index():
 def status():
     return jsonify(get_user_tracker().get_status())
 
-@app.route('/api/debug')
+@app.route('/api/history')
+def history():
+    return jsonify(get_user_tracker().get_history())
+
 @app.route('/api/start', methods=['POST'])
 def start():
     tracker = get_user_tracker()
