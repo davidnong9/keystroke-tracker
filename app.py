@@ -2,8 +2,10 @@ from flask import Flask, jsonify, render_template, request, session
 from tracker import KeystrokeTrackerBackend
 import uuid
 
+import os
+
 app = Flask(__name__)
-app.secret_key = 'keystroke-tracker-secret-key-12345'
+app.secret_key = os.environ.get('SECRET_KEY', 'keystroke-tracker-secret-key-12345')
 
 def get_user_tracker():
     """Get or create a tracker instance for the current user using Flask session"""
