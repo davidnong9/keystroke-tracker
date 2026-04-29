@@ -3,21 +3,49 @@ from tracker import KeystrokeTrackerBackend
 import uuid
 
 app = Flask(__name__)
-app.secret_key = 'keystroke-tracker-secret-key'
-
-# Store each user's tracker instance
-user_trackers = {}
+app.secret_key = 'keystroke-tracker-secret-key-12345'
 
 def get_user_tracker():
-    """Get or create a tracker instance for the current user"""
+    """Get or create a tracker instance for the current user using Flask session"""
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
     
     user_id = session['user_id']
-    if user_id not in user_trackers:
-        user_trackers[user_id] = KeystrokeTrackerBackend()
     
-    return user_trackers[user_id]
+    # Initialize tracker state in session if not present
+    if 'tracker_data' not in session:
+        session['tracker_data'] = {
+            'count': 0,
+            'key_counts': {},
+            'running': False,
+            'sessions': [],
+            'session_start_count': 0,
+            'session_start_time': None
+        }
+    
+    # Create a tracker instance and restore its state from session
+    tracker = KeystrokeTrackerBackend()
+    data = session['tracker_data']
+    tracker.count = data['count']
+    tracker.key_counts = data['key_counts']
+    tracker.running = data['running']
+    tracker.sessions = data['sessions']
+    tracker.session_start_count = data['session_start_count']
+    tracker.session_start_time = data['session_start_time']
+    
+    return tracker
+
+def save_tracker_state(tracker):
+    """Save tracker state back to Flask session"""
+    session['tracker_data'] = {
+        'count': tracker.count,
+        'key_counts': tracker.key_counts,
+        'running': tracker.running,
+        'sessions': tracker.sessions,
+        'session_start_count': tracker.session_start_count,
+        'session_start_time': tracker.session_start_time
+    }
+    session.modified = True
 
 @app.route('/')
 def index():
@@ -35,12 +63,14 @@ def history():
 def start():
     tracker = get_user_tracker()
     tracker.start()
+    save_tracker_state(tracker)
     return jsonify({'success': True, 'status': tracker.get_status()})
 
 @app.route('/api/stop', methods=['POST'])
 def stop():
     tracker = get_user_tracker()
     tracker.stop()
+    save_tracker_state(tracker)
     return jsonify({'success': True, 'status': tracker.get_status(), 'history': tracker.get_history()})
 
 @app.route('/api/keypress', methods=['POST'])
@@ -49,7 +79,9 @@ def keypress():
     key = data.get('key')
     if key is None:
         return jsonify({'success': False, 'error': 'Missing key'}), 400
-    get_user_tracker().record_key(key)
+    tracker = get_user_tracker()
+    tracker.record_key(key)
+    save_tracker_state(tracker)
     return jsonify({'success': True})
 
 if __name__ == '__main__':
