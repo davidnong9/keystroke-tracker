@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request, session
 from tracker import KeystrokeTrackerBackend
+from datetime import datetime, timezone
 import uuid
 import os
 
@@ -10,13 +11,10 @@ if not secret:
 app.secret_key = secret
 
 def get_user_tracker():
-    """Get or create a tracker instance for the current user using Flask session"""
+    """Get or create a tracker instance for the current user using Flask session."""
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
-    
-    user_id = session['user_id']
-    
-    # Initialize tracker state in session if not present
+
     if 'tracker_data' not in session:
         session['tracker_data'] = {
             'count': 0,
@@ -26,8 +24,7 @@ def get_user_tracker():
             'session_start_count': 0,
             'session_start_time': None
         }
-    
-    # Create a tracker instance and restore its state from session
+
     tracker = KeystrokeTrackerBackend()
     data = session['tracker_data']
     tracker.count = data['count']
@@ -35,19 +32,33 @@ def get_user_tracker():
     tracker.running = data['running']
     tracker.sessions = data['sessions']
     tracker.session_start_count = data['session_start_count']
-    tracker.session_start_time = data['session_start_time']
-    
+
+    # Deserialize session_start_time back to a timezone-aware datetime if present
+    raw_time = data['session_start_time']
+    if raw_time is None:
+        tracker.session_start_time = None
+    elif isinstance(raw_time, datetime):
+        # Ensure it's timezone-aware
+        if raw_time.tzinfo is None:
+            tracker.session_start_time = raw_time.replace(tzinfo=timezone.utc)
+        else:
+            tracker.session_start_time = raw_time
+    else:
+        # Stored as an ISO string — parse it back to datetime
+        tracker.session_start_time = datetime.fromisoformat(str(raw_time)).replace(tzinfo=timezone.utc)
+
     return tracker
 
 def save_tracker_state(tracker):
-    """Save tracker state back to Flask session"""
+    """Save tracker state back to Flask session."""
     session['tracker_data'] = {
         'count': tracker.count,
         'key_counts': tracker.key_counts,
         'running': tracker.running,
         'sessions': tracker.sessions,
         'session_start_count': tracker.session_start_count,
-        'session_start_time': tracker.session_start_time
+        # Store as ISO string so Flask can safely serialize/deserialize it
+        'session_start_time': tracker.session_start_time.isoformat() if tracker.session_start_time else None,
     }
     session.modified = True
 

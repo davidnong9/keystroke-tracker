@@ -1,5 +1,5 @@
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class KeystrokeTrackerBackend:
@@ -20,7 +20,7 @@ class KeystrokeTrackerBackend:
             self.count = 0  # Reset count for each new session
             self.session_start_count = 0
             self.key_counts = {}
-            self.session_start_time = datetime.now()
+            self.session_start_time = datetime.now(timezone.utc)
 
     def stop(self):
         with self.lock:
@@ -30,7 +30,7 @@ class KeystrokeTrackerBackend:
             session_keystrokes = self.count - self.session_start_count
             duration_string = self._format_duration(self._get_duration_seconds())
             self.sessions.append({
-                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'time': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
                 'duration': duration_string,
                 'keystrokes': session_keystrokes,
                 'top_keys': self._top_keys_str(),
@@ -57,7 +57,7 @@ class KeystrokeTrackerBackend:
     def _get_duration_seconds(self):
         if not self.session_start_time:
             return 0
-        return int((datetime.now() - self.session_start_time).total_seconds())
+        return int((datetime.now(timezone.utc) - self.session_start_time).total_seconds())
 
     def _format_duration(self, seconds):
         hours = seconds // 3600
