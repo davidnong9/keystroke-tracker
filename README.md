@@ -1,6 +1,6 @@
 # Keystroke Tracker
 
-A web-based keystroke tracking app built with Flask, and a standalone desktop version built with Tkinter. Track how many keys you press, see your top 3 most-used keys in real time, and review your session history.
+A web-based keystroke tracking app built with Flask, and a standalone desktop version built with Tkinter. Track how many keys you press, see your top 3 most-used keys in real time, and review your session history. Try it live: [Keystroke Tracker](https://top3-keystroke-tracker-3919d782d8aa.herokuapp.com/)
 
 ## Features
 
@@ -54,6 +54,48 @@ Then open [http://localhost:5000](http://localhost:5000) in your browser.
 ```bash
 python main.py
 ```
+
+## Global Keystroke Tracking (Desktop)
+
+The web app can only capture keypresses while the browser tab is focused. If you want to track keystrokes system-wide — across all apps and windows — you need to run the desktop app (`main.py`) on your local machine.
+
+### Setup
+
+1. Make sure Python 3.11+ is installed — download from [python.org](https://python.org)
+
+2. Install dependencies:
+
+```bash
+pip install pynput requests
+```
+
+3. Open `main.py` and confirm the server URL points to your hosted app:
+
+```python
+SERVER_URL = "https://top3-keystroke-tracker-3919d782d8aa.herokuapp.com"
+```
+
+4. Run it:
+
+```bash
+python main.py
+```
+
+5. Click **Start Tracking** — keystrokes will be captured system-wide and synced to the web app in real time. You can then view your stats in the browser from any device.
+
+**Mac users:** You'll need to grant Accessibility permissions when prompted. Go to System Preferences → Privacy & Security → Accessibility and enable the terminal or app running `main.py`. This is required for `pynput` to read global keypresses.
+
+### Who cannot use global tracking
+
+Global keystroke tracking is not available in all situations. Users in the following cases are limited to browser-only tracking via the web app:
+
+- **Chromebook / ChromeOS users** — no Python runtime available by default
+- **iOS and Android users** — mobile operating systems do not allow apps to read keypresses from other apps
+- **Users without install rights** — installing Python or running local scripts may be blocked on managed or corporate machines
+- **Linux users without X11** — `pynput` requires an X display server and does not currently support Wayland natively
+- **Mac users who decline Accessibility permissions** — without this permission, `pynput` cannot read global keypresses on macOS
+
+These users can still use the web app fully — they just won't be able to capture keypresses made outside the browser tab.
 
 ## How It Works
 
