@@ -40,6 +40,28 @@
       <canvas id="topKeysChart" width="400" height="200"></canvas>
     </section>
 
+    <section class="all-keys-card">
+      <div class="all-keys-header">
+        <h2>All Keys Pressed</h2>
+        <span id="allKeysCount" class="all-keys-meta">0 unique keys</span>
+      </div>
+      <div class="all-keys-table-wrap">
+        <table id="allKeysTable">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Key</th>
+              <th>Count</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody id="allKeysBody">
+            <tr><td colspan="4" class="empty-msg">Start tracking to see key data.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="controls">
       <button id="startButton" class="btn btn-primary" onclick="startTracking()">Start</button>
       <button id="stopButton" class="btn btn-secondary" onclick="stopTracking()" disabled>Stop</button>
@@ -127,6 +149,44 @@
       topKeysChart.update();
     }
 
+    function updateAllKeysTable(allKeysData) {
+      const tbody = document.getElementById('allKeysBody');
+      const total = allKeysData.reduce((sum, item) => sum + item.count, 0);
+
+      document.getElementById('allKeysCount').textContent =
+        allKeysData.length + ' unique key' + (allKeysData.length !== 1 ? 's' : '');
+
+      if (allKeysData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Start tracking to see key data.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allKeysData.map((item, index) => {
+        const share = total > 0 ? ((item.count / total) * 100).toFixed(1) : '0.0';
+        const barWidth = total > 0 ? ((item.count / allKeysData[0].count) * 100).toFixed(1) : 0;
+        const isTop3 = index < 3;
+        return `
+          <tr class="${isTop3 ? 'top-key-row' : ''}">
+            <td class="rank-cell">${index + 1}</td>
+            <td class="key-cell"><kbd>${escapeHtml(item.key)}</kbd></td>
+            <td class="count-cell">${item.count}</td>
+            <td class="share-cell">
+              <div class="share-bar-wrap">
+                <div class="share-bar ${isTop3 ? 'share-bar-top' : ''}" style="width: ${barWidth}%"></div>
+                <span class="share-pct">${share}%</span>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
     function updateUI(status) {
       document.getElementById('count').textContent = status.count;
       document.getElementById('duration').textContent = status.duration;
@@ -135,6 +195,7 @@
       document.getElementById('stopButton').disabled = !status.running;
       tracking = status.running;
       updateChart(status.top_keys_data || []);
+      updateAllKeysTable(status.all_keys_data || []);
     }
 
     async function fetchStatus() {

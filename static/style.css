@@ -153,3 +153,131 @@ header p {
   max-width: 100%;
   height: auto !important;
 }
+
+.all-keys-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+ 
+.all-keys-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+ 
+.all-keys-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+ 
+.all-keys-meta {
+  font-size: 0.8rem;
+  color: #888;
+}
+ 
+.all-keys-table-wrap {
+  max-height: 300px;
+  overflow-y: auto;
+}
+ 
+#allKeysTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+ 
+#allKeysTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f9f9f9;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e0e0e0;
+}
+ 
+#allKeysTable tbody tr:hover {
+  background: #f5f5f5;
+}
+ 
+#allKeysTable td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+ 
+.top-key-row {
+  background: #fffbf0;
+}
+ 
+.rank-cell {
+  color: #aaa;
+  width: 40px;
+  text-align: center;
+}
+ 
+.top-key-row .rank-cell {
+  color: #e6a817;
+  font-weight: 600;
+}
+ 
+.key-cell kbd {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+ 
+.top-key-row .key-cell kbd {
+  background: #fff3cd;
+  border-color: #e6a817;
+}
+ 
+.count-cell {
+  width: 60px;
+  font-weight: 500;
+  text-align: right;
+}
+ 
+.share-cell {
+  width: 140px;
+}
+ 
+.share-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.share-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #d0d0d0;
+  flex-shrink: 0;
+  min-width: 2px;
+}
+ 
+.share-bar-top {
+  background: #f0a500;
+}
+ 
+.share-pct {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+}
+ 
+.empty-msg {
+  text-align: center;
+  color: #aaa;
+  padding: 1.5rem !important;
+  font-size: 0.85rem;
+}

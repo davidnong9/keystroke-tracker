@@ -54,6 +54,11 @@ class KeystrokeTrackerBackend:
         sorted_keys = sorted(self.key_counts.items(), key=lambda x: x[1], reverse=True)[:n]
         return [{'key': k, 'count': v} for k, v in sorted_keys]
 
+    def _all_keys_data(self):
+        """Return all keys sorted by press count descending."""
+        sorted_keys = sorted(self.key_counts.items(), key=lambda x: x[1], reverse=True)
+        return [{'key': k, 'count': v} for k, v in sorted_keys]
+
     def _get_duration_seconds(self):
         if not self.session_start_time:
             return 0
@@ -72,6 +77,7 @@ class KeystrokeTrackerBackend:
                 'count': self.count,
                 'top_keys': self._top_keys_str(),
                 'top_keys_data': self._top_keys_data(),
+                'all_keys_data': self._all_keys_data(),
                 'duration': self._format_duration(self._get_duration_seconds()) if self.running else '00:00:00',
             }
 
